@@ -43,7 +43,7 @@ web2.0，网站要根据用户个性化信息来实时生成动态页面和提�
 
 #### 键值（key-value）存储数据库
 
-```
+```css
 这一类数据库主要会使用到一个哈希表，这个表中有一个特定的键和一个指针指向特定的数据。Key/Value模型对于IT系统来说，优势在于简单、易部署。但是如果DBA值对部分值进行查询或更新的时候，Key/Value就显得效率低下了。
 
 相关产品：Tokyo Cabinet/Tyrant、Redis、Voldemort、Berkeley DB
@@ -55,7 +55,7 @@ web2.0，网站要根据用户个性化信息来实时生成动态页面和提�
 
 #### 列存储数据库
 
-```
+```css
 这部分数据库通常用来应对分布式存储的海量数据。键仍然存在，但是他们的特点是指向了多个列。这些列是由列家族来安排的。
 
 相关产品：Cassandra、HBase、Riak
@@ -67,7 +67,7 @@ web2.0，网站要根据用户个性化信息来实时生成动态页面和提�
 
 #### 文档型数据库
 
-```
+```css
 文档型数据库的灵感是来自于Lotus Notes办公软件，它同第一种键值存储相类似。该类型的数据模型是版本化的文档，半结构化的文档以特定的格式存储，比如JSON。文档型数据库可以看作是键值数据库的升级版，允许之间嵌套键值。而且文档数据库比键值数据库的查询效率更高。
 
 相关产品：CouchDB、MongoDB
@@ -79,7 +79,7 @@ web2.0，网站要根据用户个性化信息来实时生成动态页面和提�
 
 #### 图像(Graph)数据库
 
-```
+```css
 图形结构的数据库同其它行列以及刚性结构的SQL数据库不同，它是使用灵活的图形模型，并且能够扩展到多个服务器上。NoSQL数据库没有标准的查询语言（SQL)，因此进行数据库查询需要制定数据模型。许多NoSQL数据库都是REST风格的数据接口或者查询API。
 
 相关数据库：Neo4J、InfoGrid、Infinite Graph
@@ -136,7 +136,7 @@ redis作者的github地址：github.com/antirez
 
 4. 分布式会话 - 即session管理器。
 
-   ```
+   ```css
    在集群模式下，在应用不多的情况下一般使用容器自带的session复制功能就能满足，当应用增多变成相对复杂的系统时，一般都会搭建以redis等内存数据库为中心的session服务，session由session服务及内存数据库管理，而不再由容器来管理。
    ```
 
@@ -146,7 +146,7 @@ redis作者的github地址：github.com/antirez
 
 7. 最新列表 -  list
 
-   ```
+   ```css
    lpush插入一个内容ID，ltrim可以用来限制列表的数量，这样列表永远为N个ID。所以查询最新的N个记录时，直接根据ID取到对应的内容即可。
    ```
 
@@ -158,3 +158,201 @@ redis作者的github地址：github.com/antirez
 
 - **持久化**  - snapshot（备份慢）、aof（恢复慢）
 - **耗内存** - 占用内存过高。 redis可以通过redis.config文件设置最大内存，超过该内存时，写操作被拒绝，读操作正常。
+
+
+
+# 二 Redis的安装
+
+## 2.1 安装前的准备
+
+官网：[redis.io](http://redis.io)
+
+(io为名国家域名，英属印度洋领地，即British Indian Ocean territory)
+
+## 2.2 Redis源码编译安装
+
+```assembly
+打开https://redis.io/download，查看安装步骤。
+
+如需安装gcc，则使用root执行：
+yum -y install gcc automake autoconf libtool make
+
+如果yum运行时出现/var/run/yum.pid已被锁定（PID为xxxx的另一个程序正在运行），则执行：
+rm -f /var/run/yum.pid
+
+如果出现：
+cc: 错误: ../deps/lua/src/liblua.a: 没有哪个文件或目录
+进入deps目录并执行命令：
+cd /opt/redis-5.0.0/deps
+make lua hiredis linenoise
+```
+
+### 指定安装目录
+
+```assembly
+make PREFIX=/usr/local/redis install
+```
+
+
+
+## 三 Redis启动
+
+```
+ ./bin/redis-server
+```
+
+**启动redis客户端连接redis服务**
+
+```
+redis-cli -h IP地址 -p 端口
+```
+
+退出客户端
+
+```
+Ctrl+c
+```
+
+
+
+## 四 Redis基本默认配置
+
+```
+1. Redis默认不是以守护线程方式运行，如若修改，配置如下：
+   daemonize yes
+```
+
+```
+2. 当redis以守护进程的方式运行时，Redis会默认把pid写入/var/run/redis.pid，如要指定pid文件，配置如下：
+   pidfile /var/run/redis.pid
+```
+
+```
+3. redis默认端口号为6379，对应手机按键MERZ，MERZ是意大利歌女Alessia Merz的名字
+   port 6379
+```
+
+```
+4. 绑定的主机地址
+	 bind 127.0.0.1
+```
+
+```
+5. 当客户端闲置多长时间后关闭连接，如果指定为0，表示关闭该功能
+   timeout 300
+```
+
+```
+6. 指定日志爱记录级别，Redis总共支持四个级别：debug、verbose、notice、warning，默认为verbose
+   loglevel verbose
+```
+
+```
+7. 日志记录方式，默认为标准输出，如果配置Redis为守护进程方式执行，而这里又配置为日志记录方式为标准输出，则日志将会发送给/dev/null (/dev/null表示的是一个黑洞，通常用于丢弃不需要的数据输出，或者用于输入流的空文件)
+	 logfile stdout
+```
+
+```
+8. 设置数据库的数量，即默认有16个数据库，默认数据库为0，可以使用select <dbid> 命令切换数据库
+   databases 16
+```
+
+```
+9. 指定在多长时间内，有多少次更新操作，就将数据同步到数据文件，可以多个条件一起配合
+	 save <seconds> <changes>
+	 Redis默认配置文件中提供了三个条件
+	 save 900 1
+	 save 300 10
+	 save 60 10000
+	 分别表示900秒（15分钟）内有1个更改、300秒（5分钟）内由10个更改以及60秒内有10000个更改时同步数据文件。
+```
+
+```
+10. 指定存储至本地数据库时是否压缩数据，默认为yes, Redis采用LZF压缩算法进行压缩，如果为了节省CPU时间，可以关闭该选项，但会导致数据库文件变的巨大。
+		rdbcompression yes
+```
+
+```
+11.
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
