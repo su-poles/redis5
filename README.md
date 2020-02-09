@@ -195,7 +195,7 @@ make PREFIX=/usr/local/redis install
 
 
 
-## 三 Redis启动
+# 三 Redis启动
 
 ```
  ./bin/redis-server
@@ -215,7 +215,7 @@ Ctrl+c
 
 
 
-## 四 Redis基本默认配置
+# 四 Redis基本默认配置
 
 ```
 1. Redis默认不是以守护线程方式运行，如若修改，配置如下：
@@ -264,7 +264,7 @@ Ctrl+c
 	 save 900 1
 	 save 300 10
 	 save 60 10000
-	 分别表示900秒（15分钟）内有1个更改、300秒（5分钟）内由10个更改以及60秒内有10000个更改时同步数据文件。
+	 分别表示900秒（15分钟）内有1个更改、300秒（5分钟）内有10个更改以及60秒内有10000个更改时同步数据文件。
 ```
 
 ```
@@ -273,86 +273,155 @@ Ctrl+c
 ```
 
 ```
-11.
+11.指定本地数据库文件名，默认值为dump.rdb
+	 dbfilename dump.rdb
 ```
 
 ```
-
+12.指定本地数据库存放目录
+	 dir ./
 ```
 
 ```
-
+13.设置当本机为slave服务时，设置master服务器的IP地址及端口，在Redis启动时，它会自动从master进行数据同步
+	 slaveof <masterip> <masterport>
 ```
 
 ```
-
+14.当master服务设置了密码保护时，salve连接master的密码
+	 masterauth	<master-password>
 ```
 
 ```
-
+15.设置Redis连接密码，如果配置了连接密码，客户端在连接Redis时需要通过auth <password>命令提供密码，默认是关闭的
+	 redis的密码设置时要很长很复杂，因为一秒之内可以尝试大约150000个密码，所以尽可能复杂点
+	 requirepass <password> 
 ```
 
 ```
-
+16.设置同一时间最大客户端连接数，默认无限制。Redis可以同时打开的客户端连接数为Redis进程可以打开的最大文件描述符数，如果设置maxclients 0，表示不作限制。当客户端连接数达到限制时，Redis会关闭新的连接并向客户端返回max number of clients reached错误信息
+	 maxclients 128
 ```
 
 ```
-
+17.指定Redis最大内存限制。Redis在启动时会把数据加载到内存中，达到最大内存后，Redis会先尝试清楚已到期或即将到期的Key，当此方法处理后，仍然到达最大内存设置，将无法再进行写入操作，但仍然可以进行读取操作。Redis的新的VM机制，会把Key存放在内存，Value值存放在swap区
+	 maxmemory <bytes>
 ```
 
 ```
-
+18.开启aof备份
+	 appendonly yes   #默认为no
 ```
 
 ```
-
+19.指定aof备份文件名
+	 appendfilename appendonly.aof
 ```
 
 ```
-
+20.指定aof备份的频率，有三种可选项：
+	 appendfsync always      #每次收到写命令，就立即写入磁盘
+	 appendfsync everysec    #每秒钟同步一次，从aof缓冲区写入磁盘日志文件
+	 appendfsyne no          #redis不主动同步写入磁盘，依赖OS的写入策略，一般是30秒写入一次。如果发生意外，会有较长时间的数据丢失
+	 
+	 提问：如果1秒钟执行的命令太多，导致aof缓冲区溢出，怎么办？
 ```
 
 ```
-
+21.指定是否启用虚拟内存机制，默认值为no，简单的介绍一下，VM机制将数据分页存放，由Redis将访问量较少的页即冷数据swap到磁盘上，访问多的页面由磁盘自动换出到内存中
+	 vm-enabled no
 ```
 
 ```
-
+22.虚拟内存文件路径，默认值为/tmp/redis.swap，不可以死多个Redis实例共享
+	 vm-swap-file /tmp/redis.swap
 ```
 
 ```
-
+23.将所有大于vm-max-memory的数据存入虚拟内存，无论vm-max-memory设置多小，所有索引数据都是内存存储的（Redis的索引数据，就是keys）,也就是说，当vm-max-memory设置为0的时候，其实是所有的value都存在于磁盘，默认值为0
+	 vm-max-memory 0
 ```
 
 ```
-
+24.Redis swap文件分成了很多的page，一个对象可以保存在多个page上面，但一个page上不能被多个对象共享，vm-page-size是要根据存储的数据大小来设定的，作者建议如果存储很多小对象，page大小最好设置为32或者64bytes；如果存储很多大对象，则可以使用更大的page，如果不确定，就使用默认值
+	vm-page-size 32
 ```
 
 ```
-
+25.设置swap文件中的page数量，由于页表(一种表示页面空闲或使用的bitmap)是存放在内存中的，在磁盘上每8个pages将消耗1byte的内存
+	 vm-pages 134217728
 ```
 
 ```
-
+26.设置访问swap文件的线程数。最好不要超过机器的核数，如果设置为0，那么所有对swap文件的操作都是串行的，可能会造成比较长时间的延迟。默认值是4
+	 vm-max-threads 4
 ```
 
 ```
-
+27.向客户端应答时i，是否把较小的包合并为一个包发送，默认为开启
+	 glueoutputbuf yes
 ```
 
 ```
-
+28.指定在超过一定数量或者最大的元素超过某一临界值时，采用一种特殊的哈希算法
+	 hash-max-zipmap-entries 64
+	 hash-max-zipmap-value 512
 ```
 
 ```
-
+29.指定是否激活重置哈希。默认为开启
+	 activerehasing yes
 ```
 
 ```
-
+30.指定包含其它的配置文件，可以在同一主机上多个Redis实例之间使用同一份配置文件，而同时各个实例又拥有自己的特定配置文件
+	 include /path/to/local.conf
 ```
 
-```
+
+
+# 五 Redis的内存维护策略
+
+redis作为优秀的中间缓存件，时常会存储大量的数据，即使采用了集群部署来动态扩容，也应该及时的整理内存，维持系统性能。
+
+**在Redis中有两种解决方案**
+
+**1. 设置过期时间**
 
 ```
+expire key <seconds>
+pexpire key <
+milliseconds>
+setex(String key, int seconds, String value)
+
+expireat key <timestamp>    #将键的过期时间设置为unix时间戳（10位）
+pexpireat key <timestamp>   #将键的过期时间设置为13位的long类型时间戳
+
+相关命令：
+ttl					#剩余生存时间，以秒为单位返回
+pttl				   #剩余生存时间，以毫秒为单位返回
+persist				#删除过期时间 
+```
+
+> - 除了字符串有自己独有的设置过期时间的方式外（setex），其它数据类型都要依靠expire或pexpire来设置过期时间
+> - 如果没有设置过期时间，那么缓存内容永不过期
+> - 如果设置了过期时间，又想让缓存永不过期，使用persist key
+
+**2. 采用LRU算法动态清除数据**
+
+> 内存管理的一种页面置换算法，对于在内存中但又不用的数据块（内存块）叫做LRU，操作系统会根据哪些数据属于LRU而将其移出内存，进而腾出空间来加载另外的数据。
+
+1. **volatile-lru**：设定超时时间的数据中，删除最不常用的数据
+2. **allkeys-lru**：查询所有的key中最近最不常使用的数据进行删除，这是应用最广泛的策略
+3. volatile-random：在设置了过期时间的keys中，随机删除
+4. allkeys-random：在所有key中，随机删除
+5. volatile-ttl：在设置了过期时间的key中，删除马上要过期的数据。要采取这个策略，缓存对象的**TTL**值最好有差异
+6. noeviction：不删除任何操作，一旦发现内存溢出，则直接报错，并返回错误信息
+7. volatile-lfu：在所有设置了过期时间的key中，驱逐使用频率最少的键
+8. allkeys-lfu：从所有键中驱逐使用频率最少的键
+
+参考文档：  
+[缓存常用淘汰算法](docs/缓存常用淘汰算法.md)  
+[Redis中的LRU淘汰策略分析](docs/Redis中的LRU淘汰策略分析.md)  
+[Redis缓存淘汰简要总结](docs/Redis缓存淘汰简要总结.md)  
 
